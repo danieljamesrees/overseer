@@ -1,0 +1,30 @@
+baseURL = "https://danieljamesrees.github.io/overseer/"
+languageCode = "en-gb"
+title = "Overseeing the Operator - Kubernetes and Metering"
+theme = "den"
+enableEmoji = true
+defaultContentLanguage = "en"
+defaultContentLanguageInSubdir = true
+publishDir = "docs"
+
+[permalinks]
+  posts = "/:slug/" # "/:year/:month/:day/:slug/"
+  categories = "/category/:slug/" 
+  tags = "/tag/:slug/" 
+  pages = "/:slug/"
+
+[author]
+  name = "Daniel Rees"
+
+[params]
+  since = "2017"
+  rssFullContent = true
+  keywords = ["k8s","kubernetes","operators","metering"]
+  description = "Using Kubernetes Operators and Operator Metering"
+  logoTitle = "Overseer"
+  siteLogoImage = "images/binoculars.png"
+  headerImage = "images/background.jpg"
+  showAuthorCard = false
+  showMenuLanguages = false
+  autoLoadComments = false
+  dateFormatToUse = "2006-01-02"

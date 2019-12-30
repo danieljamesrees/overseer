@@ -1,0 +1,3 @@
+[submodule "docs/overseer/themes/den"]
+	path = docs/overseer/themes/den
+	url = https://github.com/shaform/hugo-theme-den.git

@@ -1,0 +1,5 @@
+---
+- version: v1alpha1
+  group: experiments.vapourware.com
+  kind: Experimental
+  role: /opt/ansible/roles/experimental

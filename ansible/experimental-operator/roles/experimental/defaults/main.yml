@@ -1,0 +1,5 @@
+---
+# defaults file for experimental
+block_time: 30
+is_public: False
+number_of_replicas: 1

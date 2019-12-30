@@ -1,0 +1,6 @@
+apiVersion: experiments.vapourware.com/v1alpha1
+kind: Experimental
+metadata:
+  name: example-experimental
+spec:
+  access_type: public

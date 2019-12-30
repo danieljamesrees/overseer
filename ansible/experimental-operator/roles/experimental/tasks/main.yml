@@ -1,0 +1,16 @@
+---
+# tasks file for experimental
+
+- name: Start experimental block chain
+  k8s:
+    definition:
+      kind: Deployment
+      apiVersion: apps/v1
+      metadata:
+        name: '{{ meta.name }}-experimental-{{ name }}'
+        namespace: '{{ meta.namespace }}'
+      spec:
+        replicas: "{{ size }}"
+        selector:
+          matchLabels:
+            app: experimental-{{ name }}
