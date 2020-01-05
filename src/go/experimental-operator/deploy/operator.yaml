@@ -16,7 +16,7 @@ spec:
       containers:
         - name: experimental-operator
           # Replace this with the built image name
-          image: 084207842491.dkr.ecr.eu-west-2.amazonaws.com/experimental-operator:v0.0.1
+          image: REPLACE_IMAGE
           command:
           - experimental-operator
           imagePullPolicy: Always

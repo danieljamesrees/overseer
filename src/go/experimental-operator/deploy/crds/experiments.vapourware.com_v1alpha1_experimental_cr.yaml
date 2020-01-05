@@ -4,5 +4,4 @@ metadata:
   name: example-experimental
 spec:
   # Add fields here
-  isPublic: True
-  numberOfReplicas: 3
+  size: 3
