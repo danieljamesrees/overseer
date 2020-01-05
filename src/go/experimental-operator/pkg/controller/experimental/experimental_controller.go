@@ -2,12 +2,17 @@ package experimental
 
 import (
 	"context"
+	"reflect"
+	"strconv"
 
 	experimentsv1alpha1 "experimental-operator/pkg/apis/experiments/v1alpha1"
+
+	"github.com/go-logr/logr"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -89,8 +94,7 @@ func (r *ReconcileExperimental) Reconcile(request reconcile.Request) (reconcile.
 
 	// Fetch the Experimental instance
 	instance := &experimentsv1alpha1.Experimental{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
-	if err != nil {
+	if err := r.client.Get(context.TODO(), request.NamespacedName, instance); err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
@@ -102,7 +106,7 @@ func (r *ReconcileExperimental) Reconcile(request reconcile.Request) (reconcile.
 	}
 
 	// Define a new Pod object
-	pod := newPodForCR(instance)
+	pod := newPodForCR(instance, 0)
 
 	// Set Experimental instance as the owner and controller
 	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
@@ -111,7 +115,7 @@ func (r *ReconcileExperimental) Reconcile(request reconcile.Request) (reconcile.
 
 	// Check if this Pod already exists
 	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
 		err = r.client.Create(context.TODO(), pod)
@@ -127,17 +131,139 @@ func (r *ReconcileExperimental) Reconcile(request reconcile.Request) (reconcile.
 
 	// Pod already exists - don't requeue
 	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
-	return reconcile.Result{}, nil
+
+	// Fetch the PodSet instance
+	experimentalResource := &experimentsv1alpha1.Experimental{}
+
+	if err = r.client.Get(context.TODO(), request.NamespacedName, experimentalResource); err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			return reconcile.Result{}, nil
+		}
+
+		// Error reading the object - requeue the request.
+		return reconcile.Result{}, err
+	}
+
+	existingPods, existingPodNames, err := r.existingPodInfo(request, experimentalResource, reqLogger)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return r.reconcileReplicas(request, existingPods, existingPodNames, experimentalResource, reqLogger)
+}
+
+func (r *ReconcileExperimental) existingPodInfo(request reconcile.Request, experimentalResource *experimentsv1alpha1.Experimental, logger logr.Logger) (*corev1.PodList, []string, error) {
+	// List all pods owned by this Experimental instance
+	lbls := labels.Set{
+		"app": experimentalResource.Name,
+	}
+
+	existingPods := &corev1.PodList{}
+
+	err := r.client.List(context.TODO(),
+		existingPods,
+		&client.ListOptions{
+			Namespace:     request.Namespace,
+			LabelSelector: labels.SelectorFromSet(lbls),
+		})
+	if err != nil {
+		logger.Error(err, "failed to list existing pods in the experimental resource")
+		return nil, nil, err
+	}
+
+	existingPodNames := []string{}
+
+	// Count the pods that are pending or running as available
+	for _, pod := range existingPods.Items {
+		if pod.GetObjectMeta().GetDeletionTimestamp() != nil {
+			continue
+		}
+
+		if pod.Status.Phase == corev1.PodPending || pod.Status.Phase == corev1.PodRunning {
+			existingPodNames = append(existingPodNames, pod.GetObjectMeta().GetName())
+		}
+	}
+
+	logger.Info("Checking podset", "expected replicas", experimentalResource.Spec.NumberOfReplicas, "Pod.Names", existingPodNames)
+
+	return existingPods, existingPodNames, nil
+}
+
+func (r *ReconcileExperimental) reconcileReplicas(request reconcile.Request, existingPods *corev1.PodList, existingPodNames []string, experimentalResource *experimentsv1alpha1.Experimental, logger logr.Logger) (reconcile.Result, error) {
+	// Update the status if necessary
+	status := experimentsv1alpha1.ExperimentalStatus{
+		NumberOfReplicas:      int32(len(existingPodNames)),
+		PersistentVolumesUsed: []string{"This would be one in a list of PVs", "Found by matching against the app label", "And extracting the appropriate metadata"},
+	}
+
+	if !reflect.DeepEqual(experimentalResource.Status, status) {
+		experimentalResource.Status = status
+		if err := r.client.Status().Update(context.TODO(), experimentalResource); err != nil {
+			logger.Error(err, "failed to update the experimental resource")
+			return reconcile.Result{}, err
+		}
+	}
+
+	if err := r.scaleDownPods(experimentalResource, existingPods, existingPodNames, logger); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if err := r.scaleUpPods(experimentalResource, existingPods, existingPodNames, logger); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{Requeue: true}, nil
+}
+
+func (r *ReconcileExperimental) scaleDownPods(experimentalResource *experimentsv1alpha1.Experimental, existingPods *corev1.PodList, existingPodNames []string, logger logr.Logger) error {
+	if int32(len(existingPodNames)) > experimentalResource.Spec.NumberOfReplicas {
+		// delete a pod. Just one at a time (this reconciler will be called again afterwards)
+		logger.Info("Deleting a pod in the experimental resource", "expected replicas", experimentalResource.Spec.NumberOfReplicas, "Pod.Names", existingPodNames)
+
+		pod := existingPods.Items[len(existingPodNames)-1]
+
+		if err := r.client.Delete(context.TODO(), &pod); err != nil {
+			logger.Error(err, "failed to delete a pod")
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *ReconcileExperimental) scaleUpPods(experimentalResource *experimentsv1alpha1.Experimental, existingPods *corev1.PodList, existingPodNames []string, logger logr.Logger) error {
+	if int32(len(existingPodNames)) < experimentalResource.Spec.NumberOfReplicas {
+		// create a new pod. Just one at a time (this reconciler will be called again afterwards)
+		logger.Info("Adding a pod in the experimentalResource", "expected replicas", experimentalResource.Spec.NumberOfReplicas, "Pod.Names", existingPodNames)
+
+		pod := newPodForCR(experimentalResource, len(existingPodNames))
+
+		if err := controllerutil.SetControllerReference(experimentalResource, pod, r.scheme); err != nil {
+			logger.Error(err, "unable to set owner reference on new pod")
+			return err
+		}
+
+		err := r.client.Create(context.TODO(), pod)
+		if err != nil {
+			logger.Error(err, "failed to create a pod")
+			return err
+		}
+	}
+
+	return nil
 }
 
 // newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *experimentsv1alpha1.Experimental) *corev1.Pod {
+func newPodForCR(cr *experimentsv1alpha1.Experimental, replicaCount int) *corev1.Pod {
 	labels := map[string]string{
 		"app": cr.Name,
 	}
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
+			Name:      cr.Name + "-pod" + strconv.Itoa(replicaCount),
 			Namespace: cr.Namespace,
 			Labels:    labels,
 		},

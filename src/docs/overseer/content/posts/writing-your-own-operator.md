@@ -268,7 +268,7 @@ To add the associated Controller for the Experimental Operator, run the command 
 
 This command above should have produced the file `pkg/controller/experimental/experimental_controller.go` (and the init code at `pkg/controller/add_experimental.go`) which should be customised to implement the business logic required. This logic typically takes the form of responding the changes in primary resource (`Experimental`) and any secondary resources. In this example, the second resource would probably be a PersistentVolume or Pod - changes in which could hypothetically require custom steps to be performed on the Experimental resources, say backing up data or updating the code in the Pods to handle changes in the blockchain structure. Yes, I have no idea how blockchain applications work.
 
-[HERE](HERE) shows all the changes I made to the scaffold code.
+This [GitHub commit diff](Hhttps://github.com/danieljamesrees/overseer/commit/9f7d3c8704a568b0fc934147ac1659bc103d9f4d) shows the key changes I made to the scaffold code.
 
 I'm not going to attempt to write any real business logic. As a novice Go developer, it looks like I could work out how to fill in the placeholders with something sensible if I had real requirements, but it feels like it would take much longer than using Ansible. As it stands, the scaffold code does deploy an Experimental resource, which is all the Ansible Overseer example achieved anyway.
 

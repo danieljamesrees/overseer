@@ -12,6 +12,8 @@ type ExperimentalSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	IsPublic         bool  `json:"isPublic"`
+	NumberOfReplicas int32 `json:"numberOfReplicas"`
 }
 
 // ExperimentalStatus defines the observed state of Experimental
@@ -19,6 +21,8 @@ type ExperimentalStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	NumberOfReplicas      int32    `json:"numberOfReplicas"`
+	PersistentVolumesUsed []string `json:"persistentVolumesUsed"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
