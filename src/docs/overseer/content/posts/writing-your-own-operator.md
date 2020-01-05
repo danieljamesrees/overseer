@@ -2,7 +2,7 @@
 title: "Writing Your Own Operator"
 date: 2019-12-30T11:42:00Z
 weight: 9
-draft: true
+draft: false
 ---
 
 There are more articles and tools to help with developing Operators, including using [Helm charts](https://docs.okd.io/latest/operators/osdk-helm.html). Based on nothing other than my own personal prejudices, I opted to try writing an Operator using Ansible and Golang. Both approaches use the [Operator SDK](https://github.com/operator-framework/operator-sdk), which is part of the [Operator Framework](https://coreos.com/blog/introducing-operator-framework). It can be installed as described at [Install Operator SDK](https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md).

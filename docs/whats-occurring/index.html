@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en-gb" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta name="generator" content="Hugo 0.62.0" />
+  <meta charset="utf-8">
+  <title>What&#39;s Occurring · Overseeing the Operator - Kubernetes and Metering</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="Overseer is a Learn in Public project to help teach me about Kubernetes Operators and metrics on Kubernetes. Or an excuse to play round with Hugo, if I&#39;m honest. The content is focused on areas I&#39;m most likely to encounter, namely running simple Spring-based stateless microservices and widely used DevOps tools on a hosted EKS cluster.
+Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components." />
+
+  <meta name="keywords" content="k8s, kubernetes, operators, metering" />
+
+<link rel="canonical" href="https://danieljamesrees.github.io/overseer/whats-occurring/" />
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+<link rel="stylesheet" href="https://danieljamesrees.github.io/overseer/css/den.css">
+
+
+
+
+<meta property="og:title" content="What&#39;s Occurring" />
+<meta property="og:description" content="Overseer is a Learn in Public project to help teach me about Kubernetes Operators and metrics on Kubernetes. Or an excuse to play round with Hugo, if I&#39;m honest. The content is focused on areas I&#39;m most likely to encounter, namely running simple Spring-based stateless microservices and widely used DevOps tools on a hosted EKS cluster.
+Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://danieljamesrees.github.io/overseer/whats-occurring/" />
+<meta property="article:published_time" content="2019-12-30T09:07:51+00:00" />
+<meta property="article:modified_time" content="2019-12-30T09:07:51+00:00" />
+<meta itemprop="name" content="What&#39;s Occurring">
+<meta itemprop="description" content="Overseer is a Learn in Public project to help teach me about Kubernetes Operators and metrics on Kubernetes. Or an excuse to play round with Hugo, if I&#39;m honest. The content is focused on areas I&#39;m most likely to encounter, namely running simple Spring-based stateless microservices and widely used DevOps tools on a hosted EKS cluster.
+Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components.">
+<meta itemprop="datePublished" content="2019-12-30T09:07:51&#43;00:00" />
+<meta itemprop="dateModified" content="2019-12-30T09:07:51&#43;00:00" />
+<meta itemprop="wordCount" content="513">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="What&#39;s Occurring"/>
+<meta name="twitter:description" content="Overseer is a Learn in Public project to help teach me about Kubernetes Operators and metrics on Kubernetes. Or an excuse to play round with Hugo, if I&#39;m honest. The content is focused on areas I&#39;m most likely to encounter, namely running simple Spring-based stateless microservices and widely used DevOps tools on a hosted EKS cluster.
+Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components."/>
+</head>
+<body>
+  
+  <div class="header-container" style="background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('https://danieljamesrees.github.io/overseer/images/background.jpg'); background-position: center; background-size: cover;">
+  <div class="container">
+  <nav class="header-nav navbar navbar-expand-md navbar-dark light-dark">
+    <div class="header-logo navbar-brand">
+      
+        <a class="float-left" href="https://danieljamesrees.github.io/overseer/">
+      
+        
+        <img class="mr20 header-logo-image" src="https://danieljamesrees.github.io/overseer/images/binoculars.png" alt="logo">
+        
+        
+          Overseer
+         
+      </a>
+    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="nav-menu collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container header-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="header-content">
+        <h1 class="header-title">What&#39;s Occurring</h1>
+        <p class="header-date">
+        2019-12-30
+        <div class="header-underline"></div>
+        
+        
+
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+  <main>
+<div class="container content">
+  <article>
+  <p>Overseer is a <a href="https://www.swyx.io/writing/learn-in-public/">Learn in Public</a> project to help teach me about <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/operator/">Kubernetes Operators</a> and metrics on Kubernetes. Or an excuse to play round with <a href="https://gohugo.io">Hugo</a>, if I'm honest. The content is focused on areas I'm most likely to encounter, namely running simple Spring-based stateless microservices and widely used DevOps tools on a hosted <a href="https://aws.amazon.com/eks/">EKS</a> cluster.</p>
+<p>Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components. The Operator pattern aims to automate the steps a human operator takes to manage a service or set of services. Kubernetes’ controllers let you extend a cluster’s behaviour without modifying the code of Kubernetes itself. Operators are clients of the Kubernetes API that act as controllers for a <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/">Custom Resource</a>. These Custom Resources are extensions of the Kubernetes API, that aren't necessarily available in a default Kubernetes installation. See <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#should-i-add-a-custom-resource-to-my-kubernetes-cluster">https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/#should-i-add-a-custom-resource-to-my-kubernetes-cluster</a> to understand whether a Custom Resource is appropriate for your installation.</p>
+<p>And I'm now bored of typing Kubernetes, so (being latte-quaffing hipster and all that), I'll hereafter refer to it as K8s.</p>
+<p>Operators can be used to analyse and monitor the use of a K8s cluster, as with the following examples:</p>
+<ul>
+<li><a href="https://operatorhub.io/operator/container-security-operator">Container Security</a> - for identifying vulnerabilities in containers hosted on the K8s cluster</li>
+<li><a href="https://operatorhub.io/operator/grafana-operator">Grafana</a> - for running the Grafana platform to analyse and visualise the operations of your applications/services</li>
+<li><a href="https://operatorhub.io/operator/litmuschaos">Litmus Chaos</a> - for chaos engineering</li>
+<li><a href="https://operatorhub.io/operator/metering-upstream">Operator Metering</a> - for usage reporting of applications/services hosted on the K8s cluster (see also <a href="https://coreos.com/blog/introducing-operator-framework-metering">Introducing the Operator Framework Metering</a></li>
+<li><a href="https://operatorhub.io/operator/prometheus">Prometheus</a> - for running the Prometheus open-source solution to store application/service metrics in a time-series database</li>
+</ul>
+<p>Operator Metering is covered in more detail at <a href="../operator-metering">operator-metering</a>.</p>
+<p>Operators can also be used to automate the management of stateful/non-K8s-native applications/services, e.g. taking backups and performing schema upgrades alongside code upgrades. The Operators below provide examples of such complex applications:</p>
+<ul>
+<li><a href="https://operatorhub.io/operator/jenkins-operator">Jenkins</a> - for managing, umm, Jenkins</li>
+<li><a href="https://operatorhub.io/operator/nexus-operator-hub">Sonatype Nexus</a> - for managing binary artefacts</li>
+<li><a href="https://operatorhub.io/operator/vault">HashiCorp Vault</a> - for managing secrets</li>
+</ul>
+<p>Interested readers, and I'm sure there will be many, can go to <a href="https://www.weave.works/blog/how-to-correctly-handle-db-schemas-during-kubernetes-rollouts">https://www.weave.works/blog/how-to-correctly-handle-db-schemas-during-kubernetes-rollouts</a> to understand how Flyway can be used by Java applications/services to perform database schema migrations. It's a little hand-wavey IMHO, but still the best article I found after a quick Google session and maybe I'm thinking this stuff is more complicated than it actually is. <a href="https://www.slideshare.net/nfrankel/zerodowntime-deployment-with-kubernetes-springboot-flyway">https://www.slideshare.net/nfrankel/zerodowntime-deployment-with-kubernetes-springboot-flyway</a> provides some other information that may aid understanding.</p>
+<p>For users, such as myself, who shouldn't be doing anything clever with K8s, there should be no need to write my own Operator. As the above links suggest, access to community operators is provided from <a href="https://operatorhub.io">OperatorHub.io</a>. However to aid my understanding, I've taken a stab at it <a href="writing-your-own-operator">writing-your-own-operator</a>. The <a href="https://kubernetes.io/docs/concepts/extend-kubernetes/service-catalog/">Service Catalog</a> provides one way of enabling applications running in K8s clusters to use external managed software offerings, such as a datastore service offered by a cloud provider. The Catalog can be installed using <a href="https://kubernetes.io/docs/tasks/service-catalog/install-service-catalog-using-helm/">Helm</a>.</p>
+<p>For AWS users, the following Operators may be relevant:</p>
+<ul>
+<li><a href="https://operatorhub.io/operator/awss3-operator-registry">AWS S3 Operator</a></li>
+<li><a href="https://operatorhub.io/operator/aws-service">AWS Service Operator</a></li>
+<li><a href="https://operatorhub.io/operator/api-operator">API Operator</a> - for exposing microservices as API, though AWS users may prefer to use <a href="https://aws.amazon.com/api-gateway/">API Gateway</a> outside of the K8s cluster</li>
+</ul>
+
+  </article>
+
+  
+  
+  
+
+
+</div>
+
+  </main><div class="footer gradient-2">
+  <div class="container footer-container ">
+    <div class="row">
+      <div class="col-xs-4 col-sm-3 col-md-3 col-lg-3">
+        <div class="footer-title">Sitemap</div>
+        <ul class="list-unstyled">
+            
+              
+                <li><a href="https://danieljamesrees.github.io/overseer/tags/">Tags</a></li>
+              
+              
+                <li><a href="https://danieljamesrees.github.io/overseer/categories/">Categories</a></li>
+              
+            
+            
+            
+            <li><a rel="alternate" type="application/rss&#43;xml" href="https://danieljamesrees.github.io/overseer/index.xml"><i class="fas fa-rss-square"></i> RSS Feed</a></li>
+            
+            
+            
+        </ul>
+      </div>
+      <div class="col-xs-4 col-sm-3 col-md-3 col-lg-3">
+        
+      </div>
+      <div class="col-xs-4 col-sm-3 col-md-3 col-lg-3">
+        
+      </div> 
+      <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        <p class="pull-right text-right">
+          <small><em>Proudly powered by <a href="https://gohugo.io/" rel="noopener" target="_blank">Hugo</a></em></small><br/>
+          <small><em>Theme - <a href="https://github.com/shaform/hugo-theme-den" rel="noopener" target="_blank">Den</a></em></small><br/>
+          <small>
+            &copy; 
+            Daniel Rees
+            
+              2017 -
+            2020
+          </small>
+          
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+</body>
+</html>

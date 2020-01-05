@@ -2,7 +2,7 @@
 title: "Operator Metering"
 date: 2020-01-03T11:30:00Z
 weight: 9
-draft: true
+draft: false
 ---
 The [Operator Metering](https://operatorhub.io/operator/metering-upstream) Operator aims to provide more knowledge about the usage and costs of running and managing k8s-native applications (i.e. Operators, rather than just applications that run on k8s). It is available as open source. The Operator ties into the cluster’s CPU and memory reporting, and calculates Infrastructure-as-a-Service (IaaS) costs and customised metrics (e.g. licensing).
 

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Overseeing the Operator - Kubernetes and Metering</title>
+    <link>https://danieljamesrees.github.io/overseer/posts/</link>
+    <description>Recent content in Posts on Overseeing the Operator - Kubernetes and Metering</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <lastBuildDate>Fri, 03 Jan 2020 11:30:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://danieljamesrees.github.io/overseer/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>What&#39;s Occurring</title>
+      <link>https://danieljamesrees.github.io/overseer/whats-occurring/</link>
+      <pubDate>Mon, 30 Dec 2019 09:07:51 +0000</pubDate>
+      
+      <guid>https://danieljamesrees.github.io/overseer/whats-occurring/</guid>
+      <description>Overseer is a Learn in Public project to help teach me about Kubernetes Operators and metrics on Kubernetes. Or an excuse to play round with Hugo, if I&#39;m honest. The content is focused on areas I&#39;m most likely to encounter, namely running simple Spring-based stateless microservices and widely used DevOps tools on a hosted EKS cluster.
+Operators are software extensions to Kubernetes that make use of custom resources to manage applications and their components.</description>
+    </item>
+    
+    <item>
+      <title>Operator Metering</title>
+      <link>https://danieljamesrees.github.io/overseer/operator-metering/</link>
+      <pubDate>Fri, 03 Jan 2020 11:30:00 +0000</pubDate>
+      
+      <guid>https://danieljamesrees.github.io/overseer/operator-metering/</guid>
+      <description>The Operator Metering Operator aims to provide more knowledge about the usage and costs of running and managing k8s-native applications (i.e. Operators, rather than just applications that run on k8s). It is available as open source. The Operator ties into the cluster’s CPU and memory reporting, and calculates Infrastructure-as-a-Service (IaaS) costs and customised metrics (e.g. licensing).
+Real world applications of Operator Metering include:
+ Cloud budgeting - Provides insight into how resources are being used.</description>
+    </item>
+    
+    <item>
+      <title>Writing Your Own Operator</title>
+      <link>https://danieljamesrees.github.io/overseer/writing-your-own-operator/</link>
+      <pubDate>Mon, 30 Dec 2019 11:42:00 +0000</pubDate>
+      
+      <guid>https://danieljamesrees.github.io/overseer/writing-your-own-operator/</guid>
+      <description>There are more articles and tools to help with developing Operators, including using Helm charts. Based on nothing other than my own personal prejudices, I opted to try writing an Operator using Ansible and Golang. Both approaches use the Operator SDK, which is part of the Operator Framework. It can be installed as described at Install Operator SDK.
+Operators manage Custom Resources. On their own, Custom Resources simply let you store and retrieve structured data of a resource.</description>
+    </item>
+    
+  </channel>
+</rss>

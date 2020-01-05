@@ -2,11 +2,32 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://danieljamesrees.github.io/overseer/categories/</loc>
+    <loc>https://danieljamesrees.github.io/overseer/whats-occurring/</loc>
+    <lastmod>2019-12-30T09:07:51+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://danieljamesrees.github.io/overseer/operator-metering/</loc>
+    <lastmod>2020-01-03T11:30:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://danieljamesrees.github.io/overseer/writing-your-own-operator/</loc>
+    <lastmod>2019-12-30T11:42:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://danieljamesrees.github.io/overseer/</loc>
+    <lastmod>2020-01-03T11:30:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://danieljamesrees.github.io/overseer/posts/</loc>
+    <lastmod>2020-01-03T11:30:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://danieljamesrees.github.io/overseer/categories/</loc>
   </url>
   
   <url>

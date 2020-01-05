@@ -2,7 +2,7 @@
 title: "What's Occurring"
 date: 2019-12-30T09:07:51Z
 weight: 7
-draft: true
+draft: false
 ---
 Overseer is a [Learn in Public](https://www.swyx.io/writing/learn-in-public/) project to help teach me about [Kubernetes Operators](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) and metrics on Kubernetes. Or an excuse to play round with [Hugo](https://gohugo.io), if I'm honest. The content is focused on areas I'm most likely to encounter, namely running simple Spring-based stateless microservices and widely used DevOps tools on a hosted [EKS](https://aws.amazon.com/eks/) cluster.
 

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en-gb" itemscope itemtype="http://schema.org/WebPage">
+<head>
+  <meta name="generator" content="Hugo 0.62.0" />
+  <meta charset="utf-8">
+  <title>Writing Your Own Operator · Overseeing the Operator - Kubernetes and Metering</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="There are more articles and tools to help with developing Operators, including using Helm charts. Based on nothing other than my own personal prejudices, I opted to try writing an Operator using Ansible and Golang. Both approaches use the Operator SDK, which is part of the Operator Framework. It can be installed as described at Install Operator SDK.
+Operators manage Custom Resources. On their own, Custom Resources simply let you store and retrieve structured data of a resource." />
+
+  <meta name="keywords" content="k8s, kubernetes, operators, metering" />
+
+<link rel="canonical" href="https://danieljamesrees.github.io/overseer/writing-your-own-operator/" />
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+<link rel="stylesheet" href="https://danieljamesrees.github.io/overseer/css/den.css">
+
+
+
+
+<meta property="og:title" content="Writing Your Own Operator" />
+<meta property="og:description" content="There are more articles and tools to help with developing Operators, including using Helm charts. Based on nothing other than my own personal prejudices, I opted to try writing an Operator using Ansible and Golang. Both approaches use the Operator SDK, which is part of the Operator Framework. It can be installed as described at Install Operator SDK.
+Operators manage Custom Resources. On their own, Custom Resources simply let you store and retrieve structured data of a resource." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://danieljamesrees.github.io/overseer/writing-your-own-operator/" />
+<meta property="article:published_time" content="2019-12-30T11:42:00+00:00" />
+<meta property="article:modified_time" content="2019-12-30T11:42:00+00:00" />
+<meta itemprop="name" content="Writing Your Own Operator">
+<meta itemprop="description" content="There are more articles and tools to help with developing Operators, including using Helm charts. Based on nothing other than my own personal prejudices, I opted to try writing an Operator using Ansible and Golang. Both approaches use the Operator SDK, which is part of the Operator Framework. It can be installed as described at Install Operator SDK.
+Operators manage Custom Resources. On their own, Custom Resources simply let you store and retrieve structured data of a resource.">
+<meta itemprop="datePublished" content="2019-12-30T11:42:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-12-30T11:42:00&#43;00:00" />
+<meta itemprop="wordCount" content="2560">
+
+
+
+<meta itemprop="keywords" content="" /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Writing Your Own Operator"/>
+<meta name="twitter:description" content="There are more articles and tools to help with developing Operators, including using Helm charts. Based on nothing other than my own personal prejudices, I opted to try writing an Operator using Ansible and Golang. Both approaches use the Operator SDK, which is part of the Operator Framework. It can be installed as described at Install Operator SDK.
+Operators manage Custom Resources. On their own, Custom Resources simply let you store and retrieve structured data of a resource."/>
+</head>
+<body>
+  
+  <div class="header-container" style="background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('https://danieljamesrees.github.io/overseer/images/background.jpg'); background-position: center; background-size: cover;">
+  <div class="container">
+  <nav class="header-nav navbar navbar-expand-md navbar-dark light-dark">
+    <div class="header-logo navbar-brand">
+      
+        <a class="float-left" href="https://danieljamesrees.github.io/overseer/">
+      
+        
+        <img class="mr20 header-logo-image" src="https://danieljamesrees.github.io/overseer/images/binoculars.png" alt="logo">
+        
+        
+          Overseer
+         
+      </a>
+    </div>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="nav-menu collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        
+        
+      </ul>
+    </div>
+  </nav>
+</div>
+
+<div class="container header-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="header-content">
+        <h1 class="header-title">Writing Your Own Operator</h1>
+        <p class="header-date">
+        2019-12-30
+        <div class="header-underline"></div>
+        
+        
+
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+  <main>
+<div class="container content">
+  <article>
+  <p>There are more articles and tools to help with developing Operators, including using <a href="https://docs.okd.io/latest/operators/osdk-helm.html">Helm charts</a>. Based on nothing other than my own personal prejudices, I opted to try writing an Operator using Ansible and Golang. Both approaches use the <a href="https://github.com/operator-framework/operator-sdk">Operator SDK</a>, which is part of the <a href="https://coreos.com/blog/introducing-operator-framework">Operator Framework</a>. It can be installed as described at <a href="https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md">Install Operator SDK</a>.</p>
+<p>Operators manage Custom Resources. On their own, Custom Resources simply let you store and retrieve structured data of a resource. The cluster still needs a custom controller to monitor the state of the resource and reconcile it to match the specified configuration. Together, a Custom Resource and its controller provides a declarative API.</p>
+<p>In lieu of having sufficient imagination to build something useful, I decided to knock up an Operator to report when Experimentals, a contrived Custom Resource representing an entirely hypothetical service for storing experiment results in a blockchain and analysing them using AI, were created or changed in a k8s cluster. Let me be clear, it's only ever going to be the name of a Resource for demonstration purposes. Nothing clever is happening here. A k8s-based blockchain demonstration is available from IBM's <a href="https://github.com/IBM/blockchain-network-on-kubernetes">blockchain-network-on-kubernetes</a>.</p>
+<p>Google has provided a set of <a href="https://cloud.google.com/blog/products/containers-kubernetes/best-practices-for-building-kubernetes-operators-and-stateful-apps">best practices</a> for building Operators. It includes enabling logging and monitoring of the Operator. As my Operator is so trivial, I didn't attempt to follow these practices.</p>
+<p>For readers who don't want to wade through the guff below, the executive summary is that it was relatively simple to use the Ansible Operator, and (as you'd expect) there's a bit more work getting the go-based Operator to work. I don't think I learned much about how Operators work, but the exercise was a reasonable refresher on k8s terminology and showed me I would go about starting to write my own real-world Operator, and I did get to fix some bugs (and introduce some more). Unless I was working on a legacy/non-standard application or for a vendor, I can't imagine needing to write my own Operator though.</p>
+<h1 id="ansible">Ansible</h1>
+<p>The <a href="https://www.ansible.com/blog/ansible-operator">Ansible Operator</a> provides features to manage OpenShift-based clusters, but can also be used for non-OpenShift clusters. It is built upon the
+<a href="https://github.com/operator-framework/operator-sdk">Operator SDK</a>, which is part of the <a href="https://coreos.com/blog/introducing-operator-framework">Operator Framework</a>. Its useful if you want to integrate with any other Ansible resources or playbooks, or if you don't have need or want to use more generic programming features.</p>
+<p>A good starting place to learn about the Ansible Operator is the <a href="https://learn.openshift.com/ansibleop/ansible-operator-overview/?extIdCarryOver=true&amp;sc_cid=701f2000001OH7YAAW">Ansible Operator course</a>. However, it's based on OpenShift, so the <a href="https://github.com/operator-framework/operator-sdk/blob/master/doc/ansible/user-guide.md">Ansible Operator User Guide</a> may be more helpful for non-OpenShift users.</p>
+<p>The Ansible Operator can trigger either a playbook or a role when the state of a Custom Resource changes. I chose to trigger a role, based on the conceit of an Experimental being a distinct kind of entity that would be managed in a common way, rather than just a set of related tasks.</p>
+<p>An example of a Custom Resource used to specify the Experimental is as follows:</p>
+<pre><code>apiVersion: &quot;experiments.vapourware.com/v1alpha1&quot;
+kind: &quot;Experimental&quot;
+metadata:
+    name: &quot;experimental&quot;
+annotations:
+    ansible.operator-sdk/reconcile-period: &quot;30s&quot;
+spec:
+    is_public: True
+</code></pre>
+<p>The <code>reconcile-period</code> annotation above indicates that the k8s cluster should ensure the Experimental resources are made to match the specified configuration every 30 seconds.</p>
+<p>The <code>spec</code> block also specifying parameters than can be used to customise the Ansible logic.</p>
+<p>As is often the case with Ansible code, it is important the Operator code is idempotent.</p>
+<h2 id="generate-the-operator-scaffold-code">Generate the Operator scaffold code</h2>
+<p>The following command generates the Operator scaffold code:</p>
+<pre><code>operator-sdk new experimental-operator --type=ansible --api-version=experiments.vapourware.com/v1alpha1 --kind=Experimental
+</code></pre>
+<p>It produces the structure shown below:</p>
+<pre><code>experimental-operator
+├── build
+│   ├── Dockerfile
+│   └── test-framework
+│       ├── Dockerfile
+│       └── ansible-test.sh
+├── deploy
+│   ├── crds
+│   │   ├── experiments.vapourware.com_experimentals_crd.yaml
+│   │   └── experiments.vapourware.com_v1alpha1_experimental_cr.yaml
+│   ├── operator.yaml
+│   ├── role.yaml
+│   ├── role_binding.yaml
+│   └── service_account.yaml
+├── molecule
+│   ├── default
+│   │   ├── asserts.yml
+│   │   ├── molecule.yml
+│   │   ├── playbook.yml
+│   │   └── prepare.yml
+│   ├── test-cluster
+│   │   ├── molecule.yml
+│   │   └── playbook.yml
+│   └── test-local
+│       ├── molecule.yml
+│       ├── playbook.yml
+│       └── prepare.yml
+├── roles
+│   └── experimental
+│       ├── README.md
+│       ├── defaults
+│       │   └── main.yml
+│       ├── files
+│       ├── handlers
+│       │   └── main.yml
+│       ├── meta
+│       │   └── main.yml
+│       ├── tasks
+│       │   └── main.yml
+│       ├── templates
+│       └── vars
+│           └── main.yml
+└── watches.yaml
+</code></pre>
+<p>The mildly interesting/non-obvious directories/files are as follows:</p>
+<ul>
+<li><code>build</code> - contains scripts that the operator-sdk uses for build and initialization</li>
+<li><code>deploy</code> - contains a generic set of k8s manifests for deploying this Operator on a k8s cluster</li>
+<li><code>watches.yaml</code> - maps the Custom Resource (identified by Group, Version, and Kind) to the Ansible code to invoke</li>
+</ul>
+<p><em>NB. I moved the <code>deploy/crd/experiments.vapourware.com_experimentals_crd.yaml</code> file to <code>deploy/crd/experiments.vapourware.com_v1alpha1_experimental_crd.yaml</code> to better fit with the examples I was following.</em></p>
+<h2 id="define-the-operator-logic">Define the Operator logic</h2>
+<p>All my Operator logic does is to deploy an Experimental resource.</p>
+<p>BTW the watches.yml can be setup to invoke a role taken from Ansible Galaxy. To install a role from Galaxy, run the command shown below:</p>
+<pre><code>ansible-galaxy install ROLE_NAME -p ./roles
+</code></pre>
+<p>My role is built upon the scaffold code generated previously. It uses the <a href="https://docs.ansible.com/ansible/latest/modules/k8s_module.html">k8s</a> module to manage the Experimental k8s objects.</p>
+<h2 id="register-the-experimental-crd">Register the Experimental CRD</h2>
+<p>I created my cluster using <a href="https://aws.amazon.com/eks/?nc2=h_ql_prod_cp_eks">EKS</a> and then deployed the Custom Resource Definition (CRD) on this cluster using the command shown below:</p>
+<pre><code>kubectl create -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_crd.yaml
+</code></pre>
+<p>The CRD defines the type of the Custom Resource object.</p>
+<h2 id="running-the-operator">Running the Operator</h2>
+<p>The Operator can be run either as a Pod inside the k8s cluster, or as a go program outside the cluster using operator-sdk. I've used the first approach (which is recommended for production) with the following command:</p>
+<pre><code>operator-sdk build experimental-operator:v0.0.1
+</code></pre>
+<p>I'll use the second approach in the Golang section.</p>
+<p>The scaffold code in <code>deploy/operator.yml</code> contains a placeholder for the name of the previously built image. It can be updated as follows:</p>
+<pre><code>sed -i 's|{{ REPLACE_IMAGE }}|YOUR_AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/experimental-operator:v0.0.1|g' deploy/operator.yaml
+</code></pre>
+<p>I created an ECR repository, then tagged and deployed the image to ECR using the usual ECR/Docker commands. However, for k8s to pull the image from ECR, the following command is needed to sett the <code>imagePullPolicy</code> to <code>Always</code>:</p>
+<pre><code>sed -i 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator.yaml
+</code></pre>
+<p><em>NB. On MacOS, the two commands are as follows:</em></p>
+<pre><code>sed -i &quot;&quot; 's|{{ REPLACE_IMAGE }}|YOUR_AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/experimental-operator:v0.0.1|g' deploy/operator.yaml
+sed -i &quot;&quot; 's|{{ pull_policy\|default('\''Always'\'') }}|Always|g' deploy/operator.yaml
+</code></pre>
+<p>If you don't want to publish your image to a registry, the <code>imagePullPolicy</code> should be set to <code>Never</code>. The Linux and MacOs commands below will make this change:</p>
+<pre><code>sed -i &quot;s|{{ pull_policy\|default('Always') }}|Never|g&quot; deploy/operator.yaml
+sed -i &quot;&quot; 's|{{ pull_policy\|default('\''Always'\'') }}|Never|g' deploy/operator.yaml
+</code></pre>
+<p>To actually deploy the Operator, use the commands below:</p>
+<pre><code>kubectl create -f deploy/service_account.yaml
+kubectl create -f deploy/role.yaml
+kubectl create -f deploy/role_binding.yaml
+kubectl create -f deploy/operator.yaml
+</code></pre>
+<p><em>NB. role.yaml and role_binding.yaml describe cluster-wide resources. Creating these requires elevated permissions.</em></p>
+<p>Verifying that the Operator is running is done by checking the output of the following command:</p>
+<pre><code>kubectl get deployment
+</code></pre>
+<h2 id="create-an-experimental-cr">Create an Experimental CR</h2>
+<p>To create an Experimental Custom Resource instance using the Operator, set <code>deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml</code> as shown below:</p>
+<pre><code>apiVersion: &quot;experiments.vapourware.com/v1alpha1&quot;
+kind: &quot;Experimental&quot;
+metadata:
+    name: &quot;experimental&quot;
+spec:
+    is_public: True
+    number_of_replicas: 3
+</code></pre>
+<p>Then run the following command:</p>
+<pre><code>kubectl apply -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml
+</code></pre>
+<p>Verify that the Operator and Experimental deployment is running (with the specified number of replicas) by checking the output of the following command:</p>
+<pre><code>kubectl get deployment
+kubectl get pods
+</code></pre>
+<h2 id="cleanup">Cleanup</h2>
+<p>To remove the Custom Resource instance, the CRD, and the Operator, run the following commands:</p>
+<pre><code>kubectl delete -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml
+kubectl delete -f deploy/operator.yaml
+kubectl delete -f deploy/role_binding.yaml
+kubectl delete -f deploy/role.yaml
+kubectl delete -f deploy/service_account.yaml
+kubectl delete -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_crd.yaml
+</code></pre>
+<p><em>NB. If you no longer need the k8s cluster you used for these deployments, tear that down too!</em></p>
+<h2 id="debugging">Debugging</h2>
+<p>To view the logs from the Ansible run, use the command below:</p>
+<pre><code>kubectl logs deployment/experimental-operator -c ansible
+</code></pre>
+<p>To view more detailed logs from the Ansible run (including the Ansible Operator internals and the interface with k8s), use the command below:</p>
+<pre><code>kubectl logs deployment/experimental-operator -c operator
+</code></pre>
+<h1 id="golang">Golang</h1>
+<p>The article <a href="https://medium.com/faun/writing-your-first-kubernetes-operator-8f3df4453234">Writing your first K8s operator</a> describes the steps involved in writing an Operator using go.</p>
+<h2 id="generate-the-operator-scaffold-code-1">Generate the Operator scaffold code</h2>
+<p>If you've set your working directory to be $GOPATH/src, the following command generates the Operator scaffold code:</p>
+<pre><code>operator-sdk new experimental-operator
+</code></pre>
+<p>I have not set up a GOPATH, so had to use the following:</p>
+<pre><code>operator-sdk new experimental-operator --repo experimental-operator
+</code></pre>
+<p>It produces the structure shown below:</p>
+<pre><code>experimental-operator
+├── build
+│   ├── Dockerfile
+│   └── bin
+│       ├── entrypoint
+│       └── user_setup
+├── cmd
+│   └── manager
+│       └── main.go
+├── deploy
+│   ├── operator.yaml
+│   ├── role.yaml
+│   ├── role_binding.yaml
+│   └── service_account.yaml
+├── go.mod
+├── go.sum
+├── pkg
+│   ├── apis
+│   │   └── apis.go
+│   └── controller
+│       └── controller.go
+├── tools.go
+└── version
+    └── version.go
+</code></pre>
+<p>The mildly interesting/non-obvious directories/files are as follows:</p>
+<ul>
+<li><code>build</code> - contains Docker code to build the Docker image</li>
+<li><code>cmd/manager/main.go</code> - go code to run the Operator</li>
+<li><code>deploy</code> - contains a generic set of k8s manifests for deploying this Operator on a k8s cluster</li>
+</ul>
+<h2 id="define-the-operator-logic-1">Define the Operator logic</h2>
+<p>To add a CRD for the Experimental Operator, run the command below from the <code>experimental-operator</code> directory:</p>
+<pre><code>operator-sdk add api --api-version=experiments.vapourware.com/v1alpha1 --kind=Experimental
+</code></pre>
+<p>The above command should have produced the following files:</p>
+<ul>
+<li>A CRD and an example Custom Resource in the <code>deploy/crds</code> directory.</li>
+<li><code>pkg/apis/app/v1alpha1/experimental_types.go</code> defines the structure of the ExperimentalSpec which is the expected state of the Experiment Custom Resource and which is specified by the user in the <code>deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml</code> file. It also defines the structure of the ExperimentalStatus which will be used to provide the observed state of the Experimental when the kubectl describe command is executed.</li>
+</ul>
+<p><em>NB. Again, I moved the <code>deploy/crd/experiments.vapourware.com_experimentals_crd.yaml</code> file to <code>deploy/crd/experiments.vapourware.com_v1alpha1_experimental_crd.yaml</code> to match what I had done in the Ansible section. This turned out to be pretty dumb.</em></p>
+<p>To add the associated Controller for the Experimental Operator, run the command below from the <code>experimental-operator</code> directory:</p>
+<pre><code>operator-sdk add controller --api-version=experiments.vapourware.com/v1alpha1 --kind=Experimental
+</code></pre>
+<p>This command above should have produced the file <code>pkg/controller/experimental/experimental_controller.go</code> (and the init code at <code>pkg/controller/add_experimental.go</code>) which should be customised to implement the business logic required. This logic typically takes the form of responding the changes in primary resource (<code>Experimental</code>) and any secondary resources. In this example, the second resource would probably be a PersistentVolume or Pod - changes in which could hypothetically require custom steps to be performed on the Experimental resources, say backing up data or updating the code in the Pods to handle changes in the blockchain structure. Yes, I have no idea how blockchain applications work.</p>
+<p><a href="HERE">HERE</a> shows all the changes I made to the scaffold code.</p>
+<p>I'm not going to attempt to write any real business logic. As a novice Go developer, it looks like I could work out how to fill in the placeholders with something sensible if I had real requirements, but it feels like it would take much longer than using Ansible. As it stands, the scaffold code does deploy an Experimental resource, which is all the Ansible Overseer example achieved anyway.</p>
+<p>Out of the box, the Controller code uses the K8s API to create a single Pod if none with a given <code>app</code> label already exists. I'll just tweak it to add IsPublic and NumberOfReplicas fields to the spec, and  and status structures.</p>
+<pre><code>type ExperimentalSpec struct {
+  IsPublic bool `json:&quot;isPublic&quot;`
+  NumberOfReplicas int32 `json:&quot;numberOfReplicas&quot;`
+}
+
+type ExperimentalStatus struct {
+  NumberOfReplicas int32 `json:&quot;numberOfReplicas&quot;`
+  PersistentVolumesUsed []string `json:&quot;persistentVolumesUsed&quot;`
+}
+</code></pre>
+<p>After adding the fields, the command below must be run:</p>
+<pre><code>operator-sdk generate k8s
+</code></pre>
+<p>Next, the code would be updated to configure the primary and secondary resources that the Controller will monitor in the namespace. For this demonstration, this is already implemented as, by default, the Controller operates on a Experimental resource and creates a Pod (which can be assumed to be a reasonable secondary resource, if I don't want to put in any actual effort to this thing).</p>
+<p>Lastly, the logic of scaling up and down the Pods and updating the Custom Resource status with the IDs of Persistent Volumes used would be implemented. All of this happens in the <code>Reconcile</code> function of the controller. The function is invoked each time the Experimental Custom Resource is changed or a change happens in the Pods belonging to the Experimental resource. A summary of what is happening during reconciliation is as follows:</p>
+<ol>
+<li>The Controller fetches the Experimental resource in the current namespace and compares the value of its NumberOfReplicas field with the actual number of Pods that match the <code>app</code> label to decide whether Pods need to be created or deleted.</li>
+<li>The Experimental resource status is updated with the correct field values for NumberOfReplicas and PersistentVolumesUsed (though I used fake values rather than fetching the PersistentVolume information required).</li>
+<li>If Pods need to be added or removed, the <code>Reconcile</code> function adds or removes one pod at a time, returns, and waits for the next invocation (since it will be called after a pod was created or deleted). Any new pods are marked as “owned” by the Experimental primary resource using the controllerutil.SetControllerReference() function. Having this ownership in place means that when the Experimental resource is deleted, all its “child” pods are deleted as well.</li>
+</ol>
+<p>My <code>Reconcile</code> code is almost entirely whipped from the <a href="https://github.com/xcoulon/podset-operator/blob/master/pkg/controller/podset/podset_controller.go#L86">aforementioned tutorial's GitHub</a> - just with added errors.</p>
+<h2 id="running-the-operator-1">Running the Operator</h2>
+<p>The Operator was then run as a go program outside the cluster using operator-sdk via the following command:</p>
+<pre><code>operator-sdk build experimental-operator:v0.0.1
+</code></pre>
+<p>The scaffold code in <code>deploy/operator.yml</code> contains a placeholder for the name of the previously built image. It can be updated as follows:</p>
+<pre><code>sed -i 's|REPLACE_IMAGE|YOUR_AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/experimental-operator:v0.0.1|g' deploy/operator.yaml
+</code></pre>
+<p><em>NB. On MacOS, the appropriate sed is as follows:</em></p>
+<pre><code>sed -i &quot;&quot; 's|REPLACE_IMAGE|YOUR_AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/experimental-operator:v0.0.1|g' deploy/operator.yaml
+</code></pre>
+<p>I created an ECR repository, then tagged and deployed the image to ECR using the usual ECR/Docker commands.</p>
+<p>I then created my cluster using <a href="https://aws.amazon.com/eks/?nc2=h_ql_prod_cp_eks">EKS</a> and deployed the Operator with the commands below:</p>
+<pre><code>kubectl create -f deploy/service_account.yaml
+kubectl create -f deploy/role.yaml
+kubectl create -f deploy/role_binding.yaml
+kubectl create -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_crd.yaml
+kubectl create -f deploy/operator.yaml
+</code></pre>
+<p><em>NB. role.yaml and role_binding.yaml describe cluster-wide resources. Creating these requires elevated permissions.</em></p>
+<p>To verify that the Operator is running, check the output of the following command:</p>
+<pre><code>kubectl get deployment
+</code></pre>
+<h2 id="create-an-experimental-cr-1">Create an Experimental CR</h2>
+<p>To create an Experimental Custom Resource instance using the Operator, add <code>deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml</code> with the contents below:</p>
+<pre><code>apiVersion: &quot;experiments.vapourware.com/v1alpha1&quot;
+kind: &quot;Experimental&quot;
+metadata:
+    name: &quot;experimental&quot;
+spec:
+    isPublic: True
+    numberOfReplicas: 3
+</code></pre>
+<p>Then run the following command:</p>
+<pre><code>kubectl apply -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml
+</code></pre>
+<p>Verify that the Operator and Experimental deployment is running (with the specified number of replicas) by checking the output of the following command:</p>
+<pre><code>kubectl get deployment
+kubectl get pods
+</code></pre>
+<p>Scaling can be tested by editing the <code>numberOfReplicas</code> field in <code>deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml</code> and running the commands below:</p>
+<pre><code>kubectl apply -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml
+kubectl get pods
+</code></pre>
+<p>To check the custom status output, use the following command:</p>
+<pre><code>kubectl describe experimental/example-experimental
+</code></pre>
+<h2 id="cleanup-1">Cleanup</h2>
+<p>To remove the Custom Resource instance, the CRD, and the Operator, run the following commands:</p>
+<pre><code>kubectl delete -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_cr.yaml
+kubectl delete -f deploy/operator.yaml
+kubectl delete -f deploy/role_binding.yaml
+kubectl delete -f deploy/role.yaml
+kubectl delete -f deploy/service_account.yaml
+kubectl delete -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_crd.yaml
+</code></pre>
+<p><em>NB. If you no longer need the k8s cluster you used for these deployments, tear that down too!</em></p>
+<h1 id="real-world-example">Real World Example</h1>
+<p>See the <a href="https://github.com/tektoncd/operator">Tekton CD Operator</a> for a more real-world example with an Operator being used to manage <code>Addon</code> and <code>Config</code> CRDs that manage the lifecycle of the created <a href="https://github.com/tektoncd/pipeline">Tekton CI/CD pipelines</a>. The video at <a href="https://devfest.gdgnantes.com/sessions/how_to_build_cloud_native_ci_cd_pipelines_with_tekton_on_kubernetes/">How to Build Cloud-Native CI/CD Pipelines with Tekton on Kubernetes</a> discusses how to use Tekton Pipelines and briefly explains how the Operator is used to manage them.</p>
+
+  </article>
+
+  
+  
+  
+
+
+</div>
+
+  </main><div class="footer gradient-2">
+  <div class="container footer-container ">
+    <div class="row">
+      <div class="col-xs-4 col-sm-3 col-md-3 col-lg-3">
+        <div class="footer-title">Sitemap</div>
+        <ul class="list-unstyled">
+            
+              
+                <li><a href="https://danieljamesrees.github.io/overseer/tags/">Tags</a></li>
+              
+              
+                <li><a href="https://danieljamesrees.github.io/overseer/categories/">Categories</a></li>
+              
+            
+            
+            
+            <li><a rel="alternate" type="application/rss&#43;xml" href="https://danieljamesrees.github.io/overseer/index.xml"><i class="fas fa-rss-square"></i> RSS Feed</a></li>
+            
+            
+            
+        </ul>
+      </div>
+      <div class="col-xs-4 col-sm-3 col-md-3 col-lg-3">
+        
+      </div>
+      <div class="col-xs-4 col-sm-3 col-md-3 col-lg-3">
+        
+      </div> 
+      <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        <p class="pull-right text-right">
+          <small><em>Proudly powered by <a href="https://gohugo.io/" rel="noopener" target="_blank">Hugo</a></em></small><br/>
+          <small><em>Theme - <a href="https://github.com/shaform/hugo-theme-den" rel="noopener" target="_blank">Den</a></em></small><br/>
+          <small>
+            &copy; 
+            Daniel Rees
+            
+              2017 -
+            2020
+          </small>
+          
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+
+</body>
+</html>
