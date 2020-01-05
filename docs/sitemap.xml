@@ -1,0 +1,16 @@
+<?xml-stylesheet type="text/xsl" href="https://danieljamesrees.github.io/overseer/sitemap.xsl"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>https://danieljamesrees.github.io/overseer/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>https://danieljamesrees.github.io/overseer/</loc>
+  </url>
+  
+  <url>
+    <loc>https://danieljamesrees.github.io/overseer/tags/</loc>
+  </url>
+  
+</urlset>
