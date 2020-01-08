@@ -31,7 +31,7 @@ Operators manage Custom Resources. On their own, Custom Resources simply let you
 Operators manage Custom Resources. On their own, Custom Resources simply let you store and retrieve structured data of a resource.">
 <meta itemprop="datePublished" content="2019-12-30T11:42:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-12-30T11:42:00&#43;00:00" />
-<meta itemprop="wordCount" content="2560">
+<meta itemprop="wordCount" content="2563">
 
 
 
@@ -297,7 +297,7 @@ kubectl delete -f deploy/crds/experiments.vapourware.com_v1alpha1_experimental_c
 <pre><code>operator-sdk add controller --api-version=experiments.vapourware.com/v1alpha1 --kind=Experimental
 </code></pre>
 <p>This command above should have produced the file <code>pkg/controller/experimental/experimental_controller.go</code> (and the init code at <code>pkg/controller/add_experimental.go</code>) which should be customised to implement the business logic required. This logic typically takes the form of responding the changes in primary resource (<code>Experimental</code>) and any secondary resources. In this example, the second resource would probably be a PersistentVolume or Pod - changes in which could hypothetically require custom steps to be performed on the Experimental resources, say backing up data or updating the code in the Pods to handle changes in the blockchain structure. Yes, I have no idea how blockchain applications work.</p>
-<p>This <a href="https://github.com/danieljamesrees/overseer/commit/9f7d3c8704a568b0fc934147ac1659bc103d9f4d">GitHub commit diff</a> shows the key changes I made to the scaffold code.</p>
+<p>This <a href="Hhttps://github.com/danieljamesrees/overseer/commit/9f7d3c8704a568b0fc934147ac1659bc103d9f4d">GitHub commit diff</a> shows the key changes I made to the scaffold code.</p>
 <p>I'm not going to attempt to write any real business logic. As a novice Go developer, it looks like I could work out how to fill in the placeholders with something sensible if I had real requirements, but it feels like it would take much longer than using Ansible. As it stands, the scaffold code does deploy an Experimental resource, which is all the Ansible Overseer example achieved anyway.</p>
 <p>Out of the box, the Controller code uses the K8s API to create a single Pod if none with a given <code>app</code> label already exists. I'll just tweak it to add IsPublic and NumberOfReplicas fields to the spec, and  and status structures.</p>
 <pre><code>type ExperimentalSpec struct {
